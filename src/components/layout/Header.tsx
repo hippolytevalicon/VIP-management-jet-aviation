@@ -1,4 +1,4 @@
-// Header.tsx
+//header, different whether you're a VIP or a staff member
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useVIPData } from '../../context/VIPDataContext';

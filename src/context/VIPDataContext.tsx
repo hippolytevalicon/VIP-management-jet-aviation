@@ -1,4 +1,29 @@
-// src/context/VIPDataContext.tsx
+/*
+ this is the brain of the app - handles pretty much all the data management and storage stuff
+ 
+ what we got here:
+ - keeps track of passengers, their seats, and what they want (food prefs etc)
+ - handles all the requests (like when someone needs something)
+ - manages cabin stuff like temperature and lights
+ - deals with notifications when things happen
+ 
+ everything gets saved in localStorage so we don't lose data on refresh
+ btw we have some mock data for seats and cabin zones to start with
+ 
+ main functions:
+ - update functions for each type of data
+ - assignSeat: puts a passenger in a seat (used a lot)
+ - addPassengerWithSeat: newer function that does both in one go
+ - addRequest: creates new requests + sends notifications
+ - reset stuff: wipes everything clean
+ 
+ some of it might need cleanup later, especially 
+ the notification system that was added at tghe last minute
+ 
+ important: always wrap components that need this data in the VIPDataProvider
+ or you'll get errors (check the useVIPData hook)
+*/
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Passenger, Request, CabinZone, PassengerHistory, Seat, Notification } from '../types';
 import { mockCabinZones, mockSeats } from '../data/mockData';
@@ -43,7 +68,7 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [seats, setSeats] = useState<Seat[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Initial data load only
+  //initial data load
   useEffect(() => {
     try {
       const storedPassengers = localStorage.getItem(STORAGE_KEYS.PASSENGERS);
@@ -86,14 +111,14 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const assignSeat = (passengerId: string, seatId: string) => {
     try {
-      // Find the passenger
+      //find passenger
       const passenger = passengers.find(p => p.id === passengerId);
       if (!passenger) {
         console.error('Passenger not found:', passengerId);
         return;
       }
   
-      // Update the seat status
+      //update seat status
       const newSeats = seats.map(seat => 
         seat.id === seatId 
           ? {
@@ -104,7 +129,7 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
           : seat
       );
   
-      // Update passenger with seat reference
+      //update passenger with seat reference
       const updatedPassenger = {
         ...passenger,
         currentSeat: seatId
@@ -114,11 +139,11 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
         p.id === passengerId ? updatedPassenger : p
       );
   
-      // Update state
+      //update state
       setSeats(newSeats);
       setPassengers(newPassengers);
   
-      // Update storage
+      //update storage
       localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(newSeats));
       localStorage.setItem(STORAGE_KEYS.PASSENGERS, JSON.stringify(newPassengers));
   
@@ -129,10 +154,9 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addPassengerWithSeat = (passenger: Passenger, seatId: string) => {
     try {
-      // Update passengers array
+      //update passengers array
       const newPassengers = [...passengers, passenger];
       
-      // Update seats array
       const newSeats = seats.map(seat => 
         seat.id === seatId 
           ? {
@@ -143,11 +167,9 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
           : seat
       );
 
-      // Update both states at once
       setPassengers(newPassengers);
       setSeats(newSeats);
 
-      // Update localStorage
       localStorage.setItem(STORAGE_KEYS.PASSENGERS, JSON.stringify(newPassengers));
       localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(newSeats));
 
@@ -198,7 +220,7 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setRequests(newRequests);
     localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(newRequests));
   
-    // Add notification
+    //add notification
     if (request.type === 'emergency') {
       addNotification({
         type: 'emergency',
@@ -240,16 +262,16 @@ export const VIPDataProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       if (type) {
         if (seatId) {
-          // Clear specific notifications for a seat
+          //clear specific notifications for a seat
           updatedNotifications = notifications.filter(n => 
             !(n.type === type && n.seatId === seatId)
           );
         } else {
-          // Clear all notifications of a type
+          //clear all notifications of a type
           updatedNotifications = notifications.filter(n => n.type !== type);
         }
       } else {
-        // Clear all notifications
+        //clear all notifications
         updatedNotifications = [];
       }
 
@@ -277,25 +299,25 @@ const markNotificationAsRead = (notificationId: string) => {
 
   const resetAllData = () => {
     try {
-      // Create clean seat structure
+      //create clean seat structure
       const baseSeats = mockSeats.map(seat => ({
         ...seat,
         status: 'available' as const,
         assignedPassengerId: undefined
       }));
 
-      // Reset all state
+      //reset all state
       setPassengers([]);
       setRequests([]);
       setSeats(baseSeats);
       setNotifications([]);
 
-      // Clear and reset localStorage
+      //clear and reset localStorage
       Object.values(STORAGE_KEYS).forEach(key => {
         localStorage.removeItem(key);
       });
 
-      // Set clean data in localStorage
+      //set clean data in localStorage
       localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(baseSeats));
       localStorage.setItem(STORAGE_KEYS.PASSENGERS, JSON.stringify([]));
       localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify([]));
