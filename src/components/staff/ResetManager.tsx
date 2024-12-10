@@ -1,24 +1,26 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVIPData } from '../../context/VIPDataContext';
 import { Seat } from '../../types';
 
 const ResetManager: React.FC = () => {
-  const { seats, passengers, resetAllData } = useVIPData();
+  const { resetAllData } = useVIPData();
   const [isResetting, setIsResetting] = useState(false);
+  const { t } = useTranslation();
 
   const handleReset = async () => {
-    if (window.confirm('Are you sure you want to reset all seat assignments? This action cannot be undone.')) {
+    if (window.confirm(t('reset.confirmation'))) {
       setIsResetting(true);
       try {
-        // Clear localStorage first
+        //clear localStorage first
         localStorage.removeItem('vip-passengers');
         localStorage.removeItem('vip-requests');
         localStorage.removeItem('vip-seats');
         
-        // Call the context reset function
+        //call the context reset function
         await resetAllData();
         
-        // Double-check and force clear any remaining assignments
+        //double-check and force clear any remaining assignments
         const remainingPassengers = JSON.parse(localStorage.getItem('vip-passengers') || '[]');
         const remainingSeats = JSON.parse(localStorage.getItem('vip-seats') || '[]') as Seat[];
         
@@ -34,7 +36,7 @@ const ResetManager: React.FC = () => {
         }
       } catch (error) {
         console.error('Reset error:', error);
-        alert('Error resetting seats. Please try again.');
+        alert(t('reset.error'));
       } finally {
         setIsResetting(false);
       }
@@ -45,9 +47,12 @@ const ResetManager: React.FC = () => {
     <button
       onClick={handleReset}
       disabled={isResetting}
-      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:bg-gray-300"
+      className="bg-red-600 dark:bg-red-500 text-white px-4 py-2 rounded-md 
+                 hover:bg-red-700 dark:hover:bg-red-600 
+                 disabled:bg-gray-300 dark:disabled:bg-gray-600
+                 transition-colors duration-200"
     >
-      {isResetting ? 'Resetting...' : 'Reset All Seats'}
+      {isResetting ? t('reset.button.resetting') : t('reset.button.default')}
     </button>
   );
 };

@@ -1,6 +1,6 @@
-//sidebar, different whether you're a VIP or a staff member
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useVIPData } from '../../context/VIPDataContext';
 import { 
@@ -17,44 +17,55 @@ import {
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const { notifications } = useVIPData();
+  const { notifications, requests } = useVIPData();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation();
 
-  const unreadEmergencies = notifications.filter(n => 
-    n.type === 'emergency' && !n.read
-  ).length;
+  const unreadEmergencies = notifications.filter(n => {
+    // Only count emergency notifications for pending emergency requests
+    if (n.type === 'emergency' && !n.read && n.requestId) {
+      const request = requests.find(r => r.id === n.requestId);
+      return request && request.status === 'pending';
+    }
+    return false;
+  }).length;
 
-  const unreadRequests = notifications.filter(n =>
-    n.type === 'request' && !n.read
-  ).length;
-
+  const unreadRequests = notifications.filter(n => {
+    // Only count notifications for pending requests
+    if (n.type === 'request' && !n.read && n.requestId) {
+      const request = requests.find(r => r.id === n.requestId);
+      return request && request.status === 'pending';
+    }
+    return false;
+  }).length;
+  
   const staffMenuItems = [
     {
-      label: 'Seat Management',
+      label: t('sidebar.staff.seatManagement'),
       path: '/seats',
-      icon: Settings,
-      notification: unreadEmergencies ? `${unreadEmergencies} Emergency!` : null,
-      notificationColor: 'bg-red-500'
+      icon: Settings
     },
     {
-      label: 'Passengers',
+      label: t('sidebar.staff.passengers'),
       path: '/passengers',
       icon: Users
     },
     {
-      label: 'Requests',
+      label: t('sidebar.staff.requests'),
       path: '/requests',
       icon: MessageSquare,
-      notification: unreadRequests ? `${unreadRequests} new` : null,
+      notification: unreadRequests ? t('sidebar.notifications.newRequests', { count: unreadRequests }) : null,
       notificationColor: 'bg-yellow-500'
     },
     {
-      label: 'Cabin Control',
+      label: t('sidebar.staff.cabinControl'),
       path: '/cabin',
-      icon: Thermometer
+      icon: Thermometer,
+      notification: unreadEmergencies ? t('sidebar.notifications.emergency', { count: unreadEmergencies }) : null,
+      notificationColor: 'bg-red-500'
     },
     {
-      label: 'Flight Info',
+      label: t('sidebar.staff.flightInfo'),
       path: '/flight',
       icon: PlaneLanding
     }
@@ -62,26 +73,29 @@ const Sidebar: React.FC = () => {
 
   const seatMenuItems = [
     { 
-      label: 'Your Preferences', 
+      label: t('sidebar.vip.preferences'),
       path: '/preferences', 
       icon: UserCog 
     },
     { 
-      label: 'Requests', 
+      label: t('sidebar.vip.requests'),
       path: '/requests',
       icon: MessageSquare,
-      notification: user?.role === 'seat' ? notifications.filter(n => 
-        !n.read && n.type === 'request' && n.seatId === user.username
-      ).length : null,
+      notification: user?.role === 'seat' ? 
+        notifications.filter(n => {
+          if (!n.read && n.type === 'request' && n.seatId === user.username && n.requestId) {
+            const request = requests.find(r => r.id === n.requestId);
+            return request && request.status === 'pending';
+          }
+          return false;
+        }).length : null,
       notificationColor: 'bg-yellow-500'
     },
     {
-      label: 'Flight Info',
+      label: t('sidebar.vip.flightInfo'),
       path: '/flight',
       icon: PlaneLanding,
-      notification: notifications.filter(n => 
-        !n.read && n.type === 'flight'
-      ).length || null,
+      notification: notifications.filter(n => !n.read && n.type === 'flight').length || null,
       notificationColor: 'bg-blue-500'
     }
   ];
@@ -90,7 +104,9 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside 
-      className={`bg-white shadow-md transition-all duration-300 flex flex-col ${
+      className={`bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm shadow-md 
+                  border-r border-gray-200 dark:border-navy-600
+                  transition-all duration-300 flex flex-col ${
         isExpanded ? 'w-64' : 'w-16'
       }`}
       onMouseEnter={() => setIsExpanded(true)}
@@ -106,8 +122,8 @@ const Sidebar: React.FC = () => {
                 to={item.path}
                 className={`flex items-center gap-4 px-4 py-3 mb-2 rounded-md transition-colors relative ${
                   location.pathname === item.path
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-blue-100 dark:bg-navy-600 text-blue-900 dark:text-blue-100'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <div className="relative">
@@ -140,7 +156,9 @@ const Sidebar: React.FC = () => {
       </div>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="p-2 m-2 text-gray-500 hover:text-gray-700 hidden md:block"
+        className="p-2 m-2 text-gray-500 dark:text-gray-400 
+                   hover:text-gray-700 dark:hover:text-gray-200 
+                   hidden md:block transition-colors duration-200"
       >
         {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
       </button>

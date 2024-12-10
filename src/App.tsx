@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { VIPDataProvider } from './context/VIPDataContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout';
 import Login from './components/auth/Login';
@@ -11,8 +12,8 @@ import CabinControls from './components/cabin/CabinControls';
 import FlightInfo from './components/flight/FlightInfo';
 import SeatManagement from './components/staff/SeatManagement';
 import PassengerPreferencesView from './components/passenger/PassengerPreferences';
+import './i18n/i18n';
 
-//protected route wrapper
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   
@@ -77,9 +78,11 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ThemeProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 };

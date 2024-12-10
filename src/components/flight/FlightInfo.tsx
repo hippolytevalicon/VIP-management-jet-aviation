@@ -1,11 +1,9 @@
-//The flight info is a template waiting for actual flight info from the API/plane sensors
-
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import FlightMetrics from './FlightMetrics';
 import FlightNotifications from './FlightNotifications';
 import FlightProgress from './FlightProgress';
 
-//simulated flight data type
 interface FlightData {
   altitude: number;
   speed: number;
@@ -18,19 +16,19 @@ interface FlightData {
 }
 
 const FlightInfo: React.FC = () => {
-  //simulated flight data
+  const { t } = useTranslation();
+
   const [flightData, setFlightData] = useState<FlightData>({
     altitude: 38000,
-    speed: 850,
-    remainingTime: 180, // 3 hours in minutes
+    speed: 450,
+    remainingTime: 180,
     departureTime: '10:00',
     arrivalTime: '13:00',
-    origin: 'JFK',
-    destination: 'LAX',
+    origin: 'CDG',
+    destination: 'FRA',
     progress: 25
   });
 
-  //simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
       setFlightData(prev => ({
@@ -38,19 +36,20 @@ const FlightInfo: React.FC = () => {
         remainingTime: Math.max(0, prev.remainingTime - 1),
         progress: Math.min(100, prev.progress + 0.1),
         altitude: prev.altitude + (Math.random() - 0.5) * 100,
-        speed: prev.speed + (Math.random() - 0.5) * 10
+        speed: prev.speed + (Math.random() - 0.5) * 5
       }));
-    }, 5000); //update every 5 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">Flight Information</h2>
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-200">
+        {t('flight.title')}
+      </h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/*left column is flight metrics and progress */}
         <div className="space-y-6">
           <FlightMetrics 
             altitude={Math.round(flightData.altitude)}
@@ -66,7 +65,6 @@ const FlightInfo: React.FC = () => {
           />
         </div>
 
-        {/*right column is notifications */}
         <FlightNotifications />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVIPData } from '../../context/VIPDataContext';
 import { useAuth } from '../../context/AuthContext';
 import RequestCard from './RequestCard';
@@ -6,11 +7,11 @@ import NewRequestForm from './NewRequestForm';
 import { RequestStatus } from '../../types';
 
 const RequestList: React.FC = () => {
+  const { t } = useTranslation();
   const { requests, passengers, seats } = useVIPData();
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | 'all'>('all');
 
-  //get current passenger ID
   const getCurrentPassengerId = () => {
     if (user?.role === 'seat') {
       const seat = seats.find(s => s.id === user.username);
@@ -21,7 +22,6 @@ const RequestList: React.FC = () => {
 
   const currentPassengerId = getCurrentPassengerId();
 
-  //filter requests based on role and status
   const filteredRequests = requests.filter(request => {
     const statusMatch = statusFilter === 'all' || request.status === statusFilter;
     if (user?.role === 'staff') {
@@ -33,32 +33,33 @@ const RequestList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">
-          {user?.role === 'staff' ? 'All Service Requests' : 'Your Requests'}
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          {t(user?.role === 'staff' ? 'request.list.title.staff' : 'request.list.title.passenger')}
         </h2>
         
         <div className="flex gap-2">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as RequestStatus | 'all')}
-            className="px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-3 py-2 border dark:border-navy-500 rounded-lg 
+                      bg-white dark:bg-navy-600 text-gray-900 dark:text-white
+                      shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 
+                      focus:border-blue-500 dark:focus:border-blue-400"
           >
-            <option value="all">All Requests</option>
-            <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
+            <option value="all">{t('request.list.filter.all')}</option>
+            <option value="pending">{t('request.list.filter.pending')}</option>
+            <option value="in-progress">{t('request.list.filter.in-progress')}</option>
+            <option value="completed">{t('request.list.filter.completed')}</option>
           </select>
         </div>
       </div>
 
-      {/*show NewRequestForm only for filled seats*/}
       {user?.role === 'seat' && currentPassengerId && (
         <div className="mb-6">
           <NewRequestForm passengerId={currentPassengerId} />
         </div>
       )}
 
-      {/*requests list*/}
       <div className="space-y-4">
         {filteredRequests.map(request => (
           <RequestCard
@@ -70,13 +71,12 @@ const RequestList: React.FC = () => {
         ))}
       </div>
 
-      {/*empty state*/}
       {filteredRequests.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             {statusFilter === 'all' 
-              ? 'No requests found.' 
-              : `No ${statusFilter} requests found.`}
+              ? t('request.list.noRequests.all')
+              : t('request.list.noRequests.filtered', { status: t(`request.list.filter.${statusFilter}`) })}
           </p>
         </div>
       )}

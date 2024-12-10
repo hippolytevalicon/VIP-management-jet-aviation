@@ -43,7 +43,7 @@ interface VIPDataContextType {
   addRequest: (newRequest: Omit<Request, 'id' | 'timestamp'>) => void;
   assignSeat: (passengerId: string, seatId: string) => void;
   resetAllData: () => void;
-  addPassengerWithSeat: (passenger: Passenger, seatId: string) => void; // New function
+  addPassengerWithSeat: (passenger: Passenger, seatId: string) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   markNotificationAsRead: (notificationId: string) => void;
   clearNotifications: (type?: 'request' | 'emergency' | 'flight', seatId?: string) => void;

@@ -35,8 +35,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           backgroundImage: 'url(/monde.jpg)',
         }}
       >
-        {/* Subtle dark overlay for better readability */}
-        <div className="absolute inset-0 bg-black/30"></div>
+        {/* Overlay - lighter for light mode, darker for dark mode */}
+        <div className="absolute inset-0 bg-black/30 dark:bg-navy-900/70 transition-colors duration-300"></div>
       </div>
 
       {/* Content */}
@@ -45,7 +45,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 p-6 transition-all duration-300">
-            <div className="bg-white/85 backdrop-blur-sm rounded-lg shadow-2xl p-6">
+            <div className="bg-white/85 dark:bg-navy-800/85 backdrop-blur-sm rounded-lg shadow-2xl p-6
+                          dark:text-white transition-colors duration-300">
               {children}
             </div>
           </main>
